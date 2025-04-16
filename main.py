@@ -45,14 +45,22 @@ def root():
     return {"data": data}
     print(data)
 
-    
+@app.get("/posts")
+def get_posts():
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    print(posts)
+    return {"data": posts}
+
 @app.post("/posts")
 def create_post(post: Post):
-    post.id = randrange(1, 100000)
-    new_post = post.dict()
-    data.append(new_post)
-    print(new_post)
-    return {"data": data}
+    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""", 
+        (post.title, post.content, post.published))
+
+    new_post = cursor.fetchone()
+    conn.commit()
+    return {"data": new_post}
+
 
 def get_one_post(id):
     for p in data:
@@ -63,7 +71,8 @@ def get_one_post(id):
 
 @app.get("/posts/{id}")
 def get_post(id: int):
-    post = get_one_post(id)
+    cursor.execute("""SELECT * FROM posts WHERE id = %s RETURNING *""", str(id))
+    post = cursor.fetchone()
     if not post:
         raise HTTPException(
             status_code= 404,
