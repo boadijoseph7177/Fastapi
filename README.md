@@ -4,24 +4,40 @@ This project is a RESTful API built with [FastAPI](https://fastapi.tiangolo.com/
 
 ## 🚀 Features
 
-- FastAPI backend
-- PostgreSQL integration
-- Raw SQL queries using `psycopg2`
-- SQLAlchemy models and ORM setup
-- Pydantic schema validation
-- Basic exception handling
-- Auto-reloading with `uvicorn`
+| Category | Details |
+|----------|---------|
+| **Posts CRUD** | Create, read, update, delete blog posts with raw SQL **and** SQLAlchemy. |
+| **User system** | `users` table (`id`, `email`, `password_hash`, `created_at`, `is_active`, `is_superuser`). |
+| **Auth** | OAuth2 password flow → time‑bound **JWT** access tokens (`/login`). |
+| **Password security** | One‑way hashing with **passlib[bcrypt]**. |
+| **Validation** | Strict request/response models via **Pydantic v2**. |
+| **Docs** | Automatic OpenAPI at `/docs` (Swagger) and `/redoc`. |
+| **Migrations** | **Alembic** keeps the DB schema in sync. |
+| **Docker** | `docker compose up` spins up API + Postgres + pgAdmin. |
+| **Hot‑reload** | Fast dev loop with **uvicorn --reload**. |
 
 ## 🗂️ Project Structure
 
 ```
 Fastapi/
 ├── app/
-│   ├── __init__.py
-│   ├── main.py           # Entry point of the FastAPI app
-│   ├── database.py       # PostgreSQL database connection
-│   └── models.py         # SQLAlchemy models
-```
+│ ├── main.py # FastAPI instance & router registry
+│ ├── core/
+│ │ ├── config.py # load settings from .env
+│ │ ├── security.py # JWT helpers (create/verify)
+│ │ └── deps.py # common dependencies (get_db, get_current_user)
+│ ├── database.py # engine, SessionLocal, Base
+│ ├── models.py # SQLAlchemy models (User, Post)
+│ ├── schemas.py # Pydantic models
+│ ├── crud.py # DB helper functions
+│ └── routers/
+│ ├── auth.py # /users, /login routes
+│ └── posts.py # /posts routes
+├── alembic/ # migrations
+├── tests/ # Pytest suites
+├── docker-compose.yml # api, db, pgadmin stack
+├── .env.example # sample environment variables
+└── README.md
 
 ## 📦 Requirements
 
@@ -72,12 +88,17 @@ Visit the docs at [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## 🧪 Example Endpoints
 
-- `GET /posts` - List all posts
-- `POST /posts` - Create a new post
-- `GET /posts/{id}` - Retrieve a post by ID
-- `PUT /posts/{id}` - Update a post
-- `DELETE /posts/{id}` - Delete a post
-- `GET /sqlalchemy` - Test SQLAlchemy connection
+| Route         | Method | Auth | Purpose              |
+| ------------- | ------ | ---- | -------------------- |
+| `/posts`      | GET    | ❌    | List posts           |
+| `/posts`      | POST   | ✅    | Create post          |
+| `/posts/{id}` | GET    | ❌    | Retrieve post        |
+| `/posts/{id}` | PUT    | ✅    | Update own post      |
+| `/posts/{id}` | DELETE | ✅    | Delete own post      |
+| `/users`      | POST   | ❌    | Register user        |
+| `/login`      | POST   | ❌    | Obtain JWT           |
+| `/users/me`   | GET    | ✅    | Current user profile |
+
 
 ## 🧰 Technologies Used
 
