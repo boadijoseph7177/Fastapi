@@ -4,6 +4,7 @@ from typing import List
 from app.database import get_db
 from sqlalchemy.orm import Session
 from app import models, schemas
+from app.routers import Oauth2
 
 router = APIRouter(
     prefix = "/posts",
@@ -16,23 +17,20 @@ def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     return posts
 
-@router.post("/")
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
-    # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""", 
-    #     (post.title, post.content, post.published))
+@router.post("/", response_model=schemas.ResponsePost)
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), get_current_user: int =
+                Depends(Oauth2.get_current_user)):
 
-    # new_post = cursor.fetchone()
-    # conn.commit()
-    # return {"data": new_post}
     new_post = models.Post(**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
+    return new_post
 
-@router.get("/{id}" , response_model=schemas.ResponsePost)
-def get_post(id: int, db: Session = Depends(get_db)):
-    # cursor.execute("""SELECT * FROM posts WHERE id = %s """, str(id))
-    # post = cursor.fetchone()
+@router.get("/{id}" , response_model=schemas.ResponsePost )
+def get_post(id: int, db: Session = Depends(get_db), get_current_user: int =
+                Depends(Oauth2.get_current_user)):
+   
     post = db.query(models.Post).filter(models.Post.id==id).first()
     if not post:
         raise HTTPException(
@@ -43,10 +41,9 @@ def get_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/{id}")
-def delete_post(id: int, db: Session = Depends(get_db)):
-    # cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING *""", str(id))
-    # deleted_post = cursor.fetchone()
-    # conn.commit()
+def delete_post(id: int, db: Session = Depends(get_db), get_current_user: int =
+                Depends(Oauth2.get_current_user)):
+  
     post = db.query(models.Post).filter(models.Post.id==id)
 
     if post.first() == None:
@@ -60,13 +57,9 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}" , response_model=schemas.ResponsePost)
-def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db), get_current_user: int =
+                Depends(Oauth2.get_current_user)):
 
-    # cursor.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE 
-    # id = %s RETURNING *""", (post.title, post.content, post.published, str(id)))
-    
-    # updated_post = cursor.fetchone()
-    # conn.commit()
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
 

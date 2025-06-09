@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional
 
 class Post(BaseModel):
     title: str
@@ -31,5 +32,12 @@ class UserOut(BaseModel):
 class LoginUser(BaseModel):
     email: EmailStr
     password: str
+
+class Token(BaseModel):
+    token: str
+    bearer: str
+
+class TokenData(BaseModel):
+    id: Optional[int] = None
 
     
