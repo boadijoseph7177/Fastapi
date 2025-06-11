@@ -4,6 +4,7 @@ from typing import List
 from app.database import get_db
 from sqlalchemy.orm import Session
 from app import models, schemas, utils
+from app.routers import Oauth2
 
 router = APIRouter(
     prefix= "/users",
@@ -11,7 +12,8 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[schemas.UserOut])
-def get_users(db: Session = Depends(get_db)):
+def get_users(db: Session = Depends(get_db), current_user: models.User =
+                Depends(Oauth2.get_current_user)):
     users = db.query(models.User).all()
     return users
 

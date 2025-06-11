@@ -13,13 +13,16 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.ResponsePost])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts( db: Session = Depends(get_db), current_user: models.User =
+                Depends(Oauth2.get_current_user)):
     posts = db.query(models.Post).all()
     return posts
 
 @router.post("/", response_model=schemas.ResponsePost)
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), get_current_user: int =
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: models.User =
                 Depends(Oauth2.get_current_user)):
+    
+    print(current_user.email)
 
     new_post = models.Post(**post.dict())
     db.add(new_post)
@@ -28,7 +31,7 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), get_cur
     return new_post
 
 @router.get("/{id}" , response_model=schemas.ResponsePost )
-def get_post(id: int, db: Session = Depends(get_db), get_current_user: int =
+def get_post(id: int, db: Session = Depends(get_db), current_user: models.User =
                 Depends(Oauth2.get_current_user)):
    
     post = db.query(models.Post).filter(models.Post.id==id).first()
@@ -41,7 +44,7 @@ def get_post(id: int, db: Session = Depends(get_db), get_current_user: int =
 
 
 @router.delete("/{id}")
-def delete_post(id: int, db: Session = Depends(get_db), get_current_user: int =
+def delete_post(id: int, db: Session = Depends(get_db), current_user: models.User =
                 Depends(Oauth2.get_current_user)):
   
     post = db.query(models.Post).filter(models.Post.id==id)
@@ -57,7 +60,7 @@ def delete_post(id: int, db: Session = Depends(get_db), get_current_user: int =
 
 
 @router.put("/{id}" , response_model=schemas.ResponsePost)
-def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db), get_current_user: int =
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db), current_user: models.User =
                 Depends(Oauth2.get_current_user)):
 
     post_query = db.query(models.Post).filter(models.Post.id == id)
