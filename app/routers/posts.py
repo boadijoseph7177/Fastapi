@@ -1,6 +1,6 @@
 
-from fastapi import HTTPException, Depends, APIRouter
-from typing import List
+from fastapi import HTTPException, Depends, APIRouter, status
+from typing import List, Optional
 from app.database import get_db
 from sqlalchemy.orm import Session
 from app import models, schemas
@@ -14,8 +14,8 @@ router = APIRouter(
 
 @router.get("/", response_model=List[schemas.ResponsePost])
 def get_posts( db: Session = Depends(get_db), current_user: models.User =
-                Depends(Oauth2.get_current_user)):
-    posts = db.query(models.Post).all()
+                Depends(Oauth2.get_current_user), limit: int = 10, skip: int = 0, search: Optional[str] = ""):
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     return posts
 
 @router.post("/", response_model=schemas.ResponsePost)
@@ -52,6 +52,10 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: models.Use
             status_code=404, 
             detail=f"The post with id={id} was not found."
         )
+    
+    if current_user.id != post.first().owner_id:
+        raise HTTPException ( status_code=status.HTTP_403_FORBIDDEN, detail=f"Unauthorized to perform this action.")
+    
     post.delete(synchronize_session=False)
     db.commit()
    
@@ -69,6 +73,10 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
             status_code = 404,
             detail=f"The post with id={id} was not found."
         )
+    
+    if current_user.id != post.first().owner_id:
+        raise HTTPException ( status_code=status.HTTP_403_FORBIDDEN, detail=f"Unauthorized to perform this action.")
+    
     
     post_query.update(updated_post.dict(), synchronize_session=False)
     db.commit()

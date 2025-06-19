@@ -10,23 +10,26 @@ class Post(BaseModel):
 class PostCreate(Post):
     pass
 
-class ResponsePost(Post):
-    id: int
-    created_at: datetime
-    owner_id: int
-    class Config:
-        orm_mode = True
-
 class UserCreate(BaseModel):
     name: str
     password: str
     email: EmailStr
 
 class UserOut(BaseModel):
+    name: str
+    email: EmailStr
     id: int
     created_at: datetime
-    email: EmailStr
-    name: str
+    
+    class Config:
+        orm_mode = True
+
+class ResponsePost(Post):
+    id: int
+    created_at: datetime
+    owner_id: int
+    owner: UserOut
+
     class Config:
         orm_mode = True
 
