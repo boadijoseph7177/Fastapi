@@ -41,7 +41,7 @@ def create_post(
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return new_post
+    return {"post": new_post, "vote_count": 0}
 
 
 @router.get("/{id}", response_model=schemas.PostOut)
