@@ -1,124 +1,124 @@
-# FastAPI CRUD API with PostgreSQL
+# PulseAPI: Social Voting Platform API
 
-This project is a RESTful API built with [FastAPI](https://fastapi.tiangolo.com/) that supports full CRUD (Create, Read, Update, Delete) operations on blog posts using both **raw SQL with psycopg2** and **SQLAlchemy ORM**. It connects to a PostgreSQL database and is designed for learning, experimentation, and extensibility.
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100.0-blue?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-1.4-blue?logo=sqlalchemy)](https://www.sqlalchemy.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-blue?logo=postgresql)](https://www.postgresql.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Features
+A high-performance, asynchronous REST API for a social voting platform, similar to a backend for Reddit or Hacker News. Built with FastAPI, PostgreSQL, and SQLAlchemy, this project features secure JWT authentication, a robust voting system, and an optimized, modular design.
 
-| Category | Details |
-|----------|---------|
-| **Posts CRUD** | Create, read, update, delete blog posts with raw SQL **and** SQLAlchemy. |
-| **User system** | `users` table (`id`, `email`, `password_hash`, `created_at`, `is_active`, `is_superuser`). |
-| **Auth** | OAuth2 password flow → time‑bound **JWT** access tokens (`/login`). |
-| **Password security** | One‑way hashing with **passlib[bcrypt]**. |
-| **Validation** | Strict request/response models via **Pydantic v2**. |
-| **Docs** | Automatic OpenAPI at `/docs` (Swagger) and `/redoc`. |
-| **Migrations** | **Alembic** keeps the DB schema in sync. |
-| **Docker** | `docker compose up` spins up API + Postgres + pgAdmin. |
-| **Hot‑reload** | Fast dev loop with **uvicorn --reload**. |
+## Key Features
 
-## 🗂️ Project Structure
+* **Secure Authentication:** Full user registration and login system using **JWT tokens** (OAuth2) and secure **bcrypt** password hashing.
+* **Full CRUD Functionality:** Complete Create, Read, Update, and Delete operations for both users and posts.
+* **Robust Voting System:** Users can upvote (`dir=1`) or remove their vote (`dir=0`) from posts.
+* **Vote Integrity:** A **composite primary key** (`user_id`, `post_id`) at the database level prevents duplicate votes and race conditions.
+* **Ownership Authorization:** Users can only update or delete their *own* posts. Attempts to modify other users' content are rejected with a **403 Forbidden** error.
+* **Optimized Vote Counts:** Efficiently calculates and returns the total vote count for posts by using a **SQLAlchemy `JOIN`** with `func.count()`, avoiding the N+1 query problem.
+* **Data Validation:** Leverages **Pydantic** schemas for automatic request validation and to ensure API responses never leak sensitive data (like password hashes).
+* **Modular Design:** Code is cleanly separated into routers for `auth`, `users`,`posts`, and `votes`, making the project scalable and easy to maintain.
 
-```
-Fastapi/
-├── app/
-│ ├── main.py # FastAPI instance & router registry
-│ ├── core/
-│ │ ├── config.py # load settings from .env
-│ │ ├── security.py # JWT helpers (create/verify)
-│ │ └── deps.py # common dependencies (get_db, get_current_user)
-│ ├── database.py # engine, SessionLocal, Base
-│ ├── models.py # SQLAlchemy models (User, Post)
-│ ├── schemas.py # Pydantic models
-│ ├── crud.py # DB helper functions
-│ └── routers/
-│ ├── auth.py # /users, /login routes
-│ └── posts.py # /posts routes
-├── alembic/ # migrations
-├── tests/ # Pytest suites
-├── docker-compose.yml # api, db, pgadmin stack
-├── .env.example # sample environment variables
-└── README.md
+## Tech Stack
 
-## 📦 Requirements
+* **Framework:** [FastAPI](https://fastapi.tiangolo.com/)
+* **Database:** [PostgreSQL](https://www.postgresql.org/)
+* **ORM:** [SQLAlchemy](https://www.sqlalchemy.org/)
+* **Authentication:** [JWT (OAuth2)](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/), [passlib](https://passlib.readthedocs.io/en/stable/)
+* **Data Validation:** [Pydantic](https://docs.pydantic.dev/latest/)
+* **DB Migrations:** [Alembic](https://alembic.sqlalchemy.org/en/latest/)
+* **Server:** [Uvicorn](https://www.uvicorn.org/)
 
-- Python 3.8+
-- PostgreSQL
-- pip
+## Project Architecture
 
-Install dependencies:
+The application is built around a clean, modular design centered on separation of concerns.
 
-```bash
-pip install -r requirements.txt
-```
+* `main.py`: The main application entrypoint. Initializes the FastAPI app, mounts CORS middleware, and includes the routers.
+* `database.py`: Manages the PostgreSQL database connection (`engine`) and provides a reusable dependency (`get_db`) for managing `SessionLocal`.
+* `models.py`: Defines the database tables (`User`, `Post`, `Vote`) using SQLAlchemy's declarative `Base`.
+* `schemas.py`: Defines the Pydantic models used for API data validation (e.g., `PostCreate`, `UserCreate`) and response shaping (e.g., `PostOut`, `UserOut`).
+* `routers/`: A directory containing the app's API logic, split by concern:
+    * `auth.py`: Handles the `/login` endpoint for token generation.
+    * `users.py`: Handles user registration and retrieval.
+    * `posts.py`: Handles all CRUD operations for posts, protected by the `get_current_user` dependency.
+    * `votes.py`: Handles the logic for casting and removing votes.
+* `Oauth2.py`: Contains all security-related utility functions for creating, verifying, and decoding JWTs, including the core `get_current_user` dependency.
+* `config.py`: Loads environment variables (like database credentials and JWT secrets) using Pydantic's `BaseSettings`.
 
-> If `requirements.txt` doesn’t exist yet, you can generate one with:
-> ```bash
-> pip freeze > requirements.txt
-> ```
+## Getting Started
 
-## 🛠️ Getting Started
+### Prerequisites
 
-1. **Clone the repository**
+* Python 3.9+
+* PostgreSQL Server
 
-```bash
-git clone https://github.com/boadijoseph7177/Fastapi.git
-cd Fastapi
-```
+### Installation
 
-2. **Set up PostgreSQL**
+1.  **Clone the repository:**
+    ```sh
+    git clone [https://github.com/boadijoseph7177/Fastapi.git](https://github.com/boadijoseph7177/Fastapi.git)
+    cd Fastapi
+    ```
 
-Make sure PostgreSQL is running and create a database named `fastapi`. Update your connection details in `main.py` and `database.py` if needed:
+2.  **Install dependencies:**
+    ```sh
+    pip install -r requirements.txt
+    ```
 
-```python
-psycopg2.connect(
-    host='localhost',
-    database='fastapi',
-    user='postgres',
-    password='yourpassword'
-)
-```
+3.  **Set up environment variables:**
+    Create a `.env` file in the root directory and add your database credentials and a JWT secret.
 
-3. **Run the API**
+    ```.env
+    DATABASE_HOSTNAME=localhost
+    DATABASE_PORT=5432
+    DATABASE_PASSWORD=your_db_password
+    DATABASE_NAME=your_db_name
+    DATABASE_USERNAME=postgres
+    SECRET_KEY=your_super_secret_jwt_key
+    ALGORITHM=HS256
+    ACCESS_TOKEN_EXPIRE_MINUTES=30
+    ```
 
-```bash
-uvicorn app.main:app --reload
-```
+4.  **Run database migrations:**
+    (This project is set up with Alembic for database migrations.)
+    ```sh
+    alembic upgrade head
+    ```
 
-Visit the docs at [http://localhost:8000/docs](http://localhost:8000/docs)
+5.  **Run the application:**
+    ```sh
+    uvicorn app.main:app --reload
+    ```
+    The API will be available at `http://localhost:8000` and the automatic documentation at `http://localhost:8000/docs`.
 
-## 🧪 Example Endpoints
+## API Endpoints
 
-| Route         | Method | Auth | Purpose              |
-| ------------- | ------ | ---- | -------------------- |
-| `/posts`      | GET    | ❌    | List posts           |
-| `/posts`      | POST   | ✅    | Create post          |
-| `/posts/{id}` | GET    | ❌    | Retrieve post        |
-| `/posts/{id}` | PUT    | ✅    | Update own post      |
-| `/posts/{id}` | DELETE | ✅    | Delete own post      |
-| `/users`      | POST   | ❌    | Register user        |
-| `/login`      | POST   | ❌    | Obtain JWT           |
-| `/users/me`   | GET    | ✅    | Current user profile |
+### Authentication
 
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/login` | Authenticates a user and returns a JWT access token. |
 
-## 🧰 Technologies Used
+### Users
 
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [psycopg2](https://www.psycopg.org/)
-- [SQLAlchemy](https://www.sqlalchemy.org/)
-- [Pydantic](https://pydantic-docs.helpmanual.io/)
-- [Uvicorn](https://www.uvicorn.org/)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/users` | Registers a new user. |
+| `GET` | `/users` | (Auth) Gets a list of all users. |
+| `GET` | `/users/{id}` | Gets details for a specific user. |
 
-## 📌 TODOs
+### Posts
 
-- [ ] Add user authentication
-- [ ] Use environment variables for database credentials
-- [ ] Create modular route structure
-- [ ] Add unit tests
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/posts` | (Auth) Gets a list of all posts with vote counts. |
+| `POST` | `/posts` | (Auth) Creates a new post. |
+| `GET` | `/posts/{id}` | (Auth) Gets a single post with its vote count. |
+| `PUT` | `/posts/{id}` | (Auth) Updates a post. (Requires ownership) |
+| `DELETE` | `/posts/{id}` | (Auth) Deletes a post. (Requires ownership) |
 
-## 📄 License
+### Votes
 
-This project is licensed under the MIT License.
-
----
-
-Built with ❤️ by [Joseph Boadi](https://github.com/boadijoseph7177)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/votes` | (Auth) Casts or removes a vote on a post. |
